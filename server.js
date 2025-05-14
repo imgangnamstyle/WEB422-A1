@@ -109,4 +109,4 @@ db.initialize(process.env.MONGODB_CONN_STRING)
     console.log('Failed to connect to MongoDB', err);
   });
 
- [module.exports = app];
+ module.exports = app;
