@@ -45,9 +45,9 @@ app.post("/api/listings", async (req, res) => {
 
 //GET /api/listings
 app.get("/api/listings", async (req, res) => {
-  const page = parseInt(req.query.page);
-  const perPage = parseInt(req.query.perPage);
-  const name = req.query.name;
+  let page = parseInt(req.query.page);
+  let perPage = parseInt(req.query.perPage);
+  let name = req.query.name;
 
   try {
     let listings = await db.getAllListings(page, perPage, name);
@@ -76,7 +76,7 @@ app.put("/api/listings/:id", async (req, res) => {
   try {
     let result = await db.updateListingById(req.body, req.params.id);
     if (result) {
-      res.status(204).end(); 
+      res.send({message: "Listing updated"});
     } else {
       res.status(404).json({message: "Listing not found"});
     }
@@ -89,7 +89,7 @@ app.delete("/api/listings/:id", async (req, res) => {
   try {
     let result = await db.deleteListingById(req.params.id);
     if (result) {
-      res.status(204).end(); 
+      res.send({message: "Listing deleted"});
     } else {
       res.status(404).json({message: "Delete listing not found"});
     }
