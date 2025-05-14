@@ -108,3 +108,8 @@ db.initialize(process.env.MONGODB_CONN_STRING)
   .catch((err) => {
     console.log('Failed to connect to MongoDB', err);
   });
+
+module.exports = (req, res) => {
+  // Express app will handle the API requests
+  app(req, res);
+};
