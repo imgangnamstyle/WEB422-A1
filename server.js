@@ -20,93 +20,81 @@ const ListingsDB = require("./modules/listingsDB.js");
 const db = new ListingsDB();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const HTTP_PORT = process.env.PORT || 3000;
 
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-//root route
+// Route
 app.get('/', (req, res) => {
-  res.json({message: 'API Listening'});
+    res.json({ message: "API Listening" });
 });
 
-
-//********API ROUTES
-//POST /api/listings
-app.post("/api/listings", async (req, res) => {
+app.post('/api/listings', async (req, res) => {
   try {
-    let result = await db.addNewListing(req.body);
-    res.status(201).json(result);
+    const newListing = await db.addNewListing(req.body);
+    res.status(201).json(newListing);
   } catch (err) {
-    res.status(500).json({message: 'Failed to add listings', error: err});
+    res.status(500).json({ message: "Failed to create listing", error: err.message });
   }
 });
 
-//GET /api/listings
-app.get("/api/listings", async (req, res) => {
-  let page = parseInt(req.query.page);
-  let perPage = parseInt(req.query.perPage);
-  let name = req.query.name;
+app.get('/api/listings', async (req, res) => {
+  const { page, perPage, name } = req.query;
 
   try {
-    let listings = await db.getAllListings(page, perPage, name);
+    const listings = await db.getAllListings(parseInt(page), parseInt(perPage), name);
     res.json(listings);
   } catch (err) {
-    res.status(500).json({message: 'Failed to get listings', error: err});
+    res.status(500).json({ message: "Failed to retrieve listings", error: err.message });
   }
 });
 
-//GET /api/listings/ID value
-app.get("/api/listings/:id", async (req, res) => {
+app.get('/api/listings/:id', async (req, res) => {
   try {
-    let listing = await db.getListingById(req.params.id);
-    if (listing) {
-      res.json(listing);
-    } else {
-      res.status(404).json({message: "Listing not found"});
+    const listing = await db.getListingById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
     }
+    res.json(listing);
   } catch (err) {
-    res.status(500).json({message: 'Failed to get listings and ID', error: err});
+    res.status(500).json({ message: "Failed to retrieve listing", error: err.message });
   }
 });
 
-//PUT /api/listings/ID value
-app.put("/api/listings/:id", async (req, res) => {
+app.put('/api/listings/:id', async (req, res) => {
   try {
-    let result = await db.updateListingById(req.body, req.params.id);
-    if (result) {
-      res.send({message: "Listing updated"});
-    } else {
-      res.status(404).json({message: "Listing not found"});
+    const result = await db.updateListingById(req.body, req.params.id);
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Listing not found or no changes made" });
     }
+    res.status(204).send(); // success, no content
   } catch (err) {
-    res.status(500).json({message: 'Failed to update listing', error: err});
+    res.status(500).json({ message: "Failed to update listing", error: err.message });
   }
 });
 
-app.delete("/api/listings/:id", async (req, res) => {
+app.delete('/api/listings/:id', async (req, res) => {
   try {
-    let result = await db.deleteListingById(req.params.id);
-    if (result) {
-      res.send({message: "Listing deleted"});
-    } else {
-      res.status(404).json({message: "Delete listing not found"});
+    const result = await db.deleteListingById(req.params.id);
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Listing not found" });
     }
+    res.status(204).send(); // success, no content
   } catch (err) {
-    res.status(500).json({message: 'Error deleting listing', error: err});
+    res.status(500).json({ message: "Failed to delete listing", error: err.message });
   }
 });
 
-//initialization
 db.initialize(process.env.MONGODB_CONN_STRING)
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server listening on: http://localhost:${PORT}`);
+    app.listen(HTTP_PORT, () => {
+      console.log(`Server listening on: ${HTTP_PORT}`);
     });
   })
   .catch((err) => {
-    console.log('Failed to connect to MongoDB', err);
+    console.log("Database connection failed:", err);
   });
 
- module.exports = app;
+module.exports = app;
